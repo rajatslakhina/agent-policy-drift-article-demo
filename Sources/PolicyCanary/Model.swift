@@ -8,7 +8,8 @@ public enum Outcome: String, Sendable, Hashable, Codable, CustomStringConvertibl
 
 /// How much a probe matters to the team's delivery.
 public enum Criticality: String, Sendable, Hashable, Codable {
-    /// A real workflow depends on this task class. A new refusal freezes agent work on it.
+    /// A real workflow depends on this task class. A fresh outcome that fails expectation,
+    /// new or carried over, freezes agent work on it.
     case blocking
     /// Worth knowing about, not worth stopping work for.
     case advisory
