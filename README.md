@@ -17,7 +17,7 @@ Around 27 October 2026, Claude Code reportedly began refusing to recreate specif
 | `Probe`, `Observation`, `Run` | A canary task with an owner, a criticality and an expected outcome; one scheduled pass of the suite. |
 | `DriftDetector.compare` | Compares two runs. Same client build plus a changed outcome → `.vendorSide`. Different build → `.clientRelease(from:to:)`. |
 | `DriftReport.action` | A blocking probe whose fresh outcome fails expectation (new or carried over) → freeze. Every other change, plus a blocking probe that didn't run → notify. The two lists are independent. |
-| `SpecLint` | Flags whole-word anchors like "copy of" and "just like", plus "like" followed by a capitalised word,, and checks for Behaviour / Constraints / Acceptance sections. |
+| `SpecLint` | Flags whole-word anchors like "copy of" and "just like", plus "like" followed by a capitalised word, and checks for Behaviour / Constraints / Acceptance sections. |
 | `Sample` | A constructed team: 10 probes, 3 runs (Mon/Tue on 5.0.12, Wed on 5.0.13). The refusals are scripted and the versions are invented; nothing here is measured. |
 
 Load-bearing decisions:
