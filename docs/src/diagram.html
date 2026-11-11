@@ -15,19 +15,19 @@ h2{font-size:30px;margin-bottom:6px}.sub{color:#59636e;font-size:19px;margin-bot
 .rule b{display:block;margin-bottom:3px}
 </style></head><body>
 <h2>How PolicyCanary reads a week of agent behaviour</h2>
-<div class="sub">Constructed scenario from the demo repo: 10 probes, scripted refusals, same client build Mon → Tue</div>
+<div class="sub">Constructed scenario from the demo repo: 10 probes, scripted refusals, same (invented) client build Mon → Tue</div>
 <div class="flow">
-<div class="box"><h3>Mon · client 2.1.316</h3><div class="row"><span>P03 wargame copy</span><span class="g">completed</span></div><div class="row"><span>P05 a11y fixes</span><span class="g">completed</span></div><div class="row"><span>P07 mini-game</span><span class="g">completed</span></div><div class="row"><span>7 others</span><span class="g">as expected</span></div></div>
+<div class="box"><h3>Mon · client 5.0.12</h3><div class="row"><span>P03 wargame copy</span><span class="g">completed</span></div><div class="row"><span>P05 a11y fixes</span><span class="g">completed</span></div><div class="row"><span>P07 mini-game</span><span class="g">completed</span></div><div class="row"><span>7 others</span><span class="g">as expected</span></div></div>
 <div class="arrow">→</div>
-<div class="box red"><h3>Tue · client 2.1.316</h3><div class="row"><span>P03 wargame copy</span><span class="r">refused</span></div><div class="row"><span>P05 (warm session)</span><span class="p">refused</span></div><div class="row"><span>P07 mini-game</span><span class="r">refused</span></div><div class="row"><span>7 others</span><span class="g">as expected</span></div></div>
+<div class="box red"><h3>Tue · client 5.0.12</h3><div class="row"><span>P03 wargame copy</span><span class="r">refused</span></div><div class="row"><span>P05 (warm session)</span><span class="p">refused</span></div><div class="row"><span>P07 mini-game</span><span class="r">refused</span></div><div class="row"><span>7 others</span><span class="g">as expected</span></div></div>
 <div class="arrow">→</div>
-<div class="box pur"><h3>Attribution</h3><p><span class="m">2.1.316 == 2.1.316</span><br>→ <b>vendor-side</b> for P03, P07.<br>No changelog will explain it.<br>P05: warm session → <b>ignored</b>.</p></div>
+<div class="box pur"><h3>Attribution</h3><p><span class="m">5.0.12 == 5.0.12</span><br>→ <b>vendor-side</b> for P03, P07.<br>No changelog will explain it.<br>P05: warm session → <b>ignored</b>.</p></div>
 <div class="arrow">→</div>
-<div class="box blu"><h3>Action</h3><p><b>freeze</b> P03 (blocking), page Dana, run the fallback.<br>P07 is advisory → logged in the report, nobody paged.</p></div>
+<div class="box blu"><h3>Action</h3><p><b>freeze</b> P03 (blocking), page Dana, run the fallback.<br><b>notify</b> Leo: P07 is advisory, so it never freezes.</p></div>
 </div>
 <div class="rules">
 <div class="rule"><b>Fresh sessions only</b>A warm observation never triggers an action; a warm baseline counts as none.</div>
 <div class="rule"><b>Same build + change = vendor side</b>Different build = check the client release notes.</div>
-<div class="rule"><b>Criticality decides</b>Blocking new refusal → freeze. Anything else → notify owners.</div>
+<div class="rule"><b>Criticality decides</b>Blocking probe failing expectation → freeze. Other changes → notify owners.</div>
 </div>
 </body></html>
