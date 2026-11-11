@@ -2,7 +2,7 @@
 
 **Treat your coding agent's policy like a dependency.** A small Swift package plus an iOS demo app. It runs canary probes from your team's prompt library, tells a vendor-side behaviour change apart from a client upgrade, and lints specs that define work by pointing at someone else's product.
 
-Article: (added after publish)
+Article: [Claude Code’s Game Rule Reportedly Shipped Server-Side. Your Version Pin Didn’t Stop It.](https://medium.com/@er.rajatlakhina/claude-codes-game-rule-reportedly-shipped-server-side-your-version-pin-didn-t-stop-it-19b4651e8838)
 
 ![PolicyCanary on the iOS Simulator: Monday to Tuesday on the same client build: a freeze on P03, a notification for Leo and a vendor-side note](Demo/Screenshots/drift-mon-tue-vendor-side.png)
 
