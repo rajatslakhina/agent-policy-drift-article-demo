@@ -37,8 +37,10 @@ public enum SpecLint {
 
     /// Anchor phrases found in the spec, plus any "like <CapitalisedName>" reference.
     public static func anchorsIn(_ spec: String) -> [String] {
-        let lower = spec.lowercased()
-        var found = anchorPhrases.filter { lower.contains($0) }
+        var found = anchorPhrases.filter { phrase in
+            let escaped = NSRegularExpression.escapedPattern(for: phrase)
+            return spec.range(of: "\\b\(escaped)\\b", options: [.regularExpression, .caseInsensitive]) != nil
+        }
         let words = spec.split(whereSeparator: { $0.isWhitespace }).map(String.init)
         for index in words.indices where words[index].lowercased() == "like" {
             let next = index + 1

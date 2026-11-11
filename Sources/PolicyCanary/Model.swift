@@ -53,7 +53,7 @@ public struct Observation: Sendable, Hashable {
 public struct Run: Identifiable, Sendable, Hashable {
     public let id: String
     public let label: String
-    /// The agent client version installed on the canary machine, e.g. "2.1.316".
+    /// The agent client version installed on the canary machine, e.g. "5.0.12".
     public let clientVersion: String
     public let observations: [Observation]
 

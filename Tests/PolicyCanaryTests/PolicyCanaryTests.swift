@@ -9,9 +9,15 @@ final class DriftDetectorTests: XCTestCase {
         XCTAssertTrue(report.hasVendorSideDrift)
     }
 
-    func testBlockingNewRefusalFreezesOnlyThatTaskClass() {
+    func testBlockingNewRefusalFreezesThatTaskClassAndStillNotifiesTheRest() {
         let report = Sample.report("mon-tue")
-        XCTAssertEqual(report.action, .freeze(probeIDs: ["P03"], owners: ["Dana"]))
+        XCTAssertEqual(report.action, Action(freezeProbeIDs: ["P03"], freezeOwners: ["Dana"], notifyOwners: ["Leo"]))
+    }
+
+    func testStillRefusingBlockingProbeStaysFrozenAfterUpgrade() {
+        let report = Sample.report("tue-wed")
+        XCTAssertEqual(report.frozen.map(\.probe.id), ["P03"])
+        XCTAssertEqual(report.action.freezeOwners, ["Dana"])
     }
 
     func testWarmSessionRefusalIsContaminatedAndIgnored() {
@@ -24,8 +30,8 @@ final class DriftDetectorTests: XCTestCase {
         let report = Sample.report("tue-wed")
         XCTAssertEqual(report.changed.map(\.probe.id), ["P07"])
         XCTAssertEqual(report.changed.first?.kind, .newlyAllowed)
-        XCTAssertEqual(report.changed.first?.attribution, .clientRelease(from: "2.1.316", to: "2.1.317"))
-        XCTAssertEqual(report.action, .notify(owners: ["Leo"]))
+        XCTAssertEqual(report.changed.first?.attribution, .clientRelease(from: "5.0.12", to: "5.0.13"))
+        XCTAssertEqual(report.action.notifyOwners, ["Leo"])
         XCTAssertFalse(report.hasVendorSideDrift)
     }
 
@@ -49,19 +55,19 @@ final class DriftDetectorTests: XCTestCase {
         }
     }
 
-    func testMissingObservationIsUnobservedAndTriggersNothing() {
+    func testMissingBlockingObservationNotifiesItsOwner() {
         let probe = Sample.probes[0]
         let base = Run(id: "a", label: "A", clientVersion: "1", observations: [Observation(probeID: probe.id, outcome: .completed)])
         let empty = Run(id: "b", label: "B", clientVersion: "1", observations: [])
         let report = DriftDetector.compare(baseline: base, current: empty, probes: [probe])
         XCTAssertEqual(report.drifts.first?.kind, .unobserved)
-        XCTAssertEqual(report.action, .none)
+        XCTAssertEqual(report.action, Action(notifyOwners: ["Priya"]))
     }
 
     func testNoProbesMeansNoAction() {
         let report = DriftDetector.compare(baseline: Sample.monday, current: Sample.tuesday, probes: [])
         XCTAssertTrue(report.drifts.isEmpty)
-        XCTAssertEqual(report.action, .none)
+        XCTAssertTrue(report.action.isNone)
     }
 
     func testDuplicateObservationsKeepTheFirst() {
@@ -92,6 +98,11 @@ final class SpecLintTests: XCTestCase {
 
     func testLikeFollowedByLowercaseIsNotAnAnchor() {
         XCTAssertTrue(SpecLint.anchorsIn("Feels like a native list. Behaves like any other screen.").isEmpty)
+    }
+
+    func testAnchorPhrasesNeedWordBoundaries() {
+        XCTAssertTrue(SpecLint.anchorsIn("Add support of dark mode. Fix the import of fonts. Show recreated rows.").isEmpty)
+        XCTAssertEqual(SpecLint.anchorsIn("A PORT OF the old screen"), ["port of"])
     }
 
     func testLikeAtEndOfSpecIsSafe() {

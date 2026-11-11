@@ -70,12 +70,13 @@ public enum Sample {
     }
 
     /// Monday: every probe behaves as expected.
-    public static let monday = run("mon", "Mon", client: "2.1.316", refused: ["P10"])
+    public static let monday = run("mon", "Mon", client: "5.0.12", refused: ["P10"])
     /// Tuesday, same client build: the two "build it like an existing game" specs refuse.
     /// P05 also refused, but it ran in a session that already had history.
-    public static let tuesday = run("tue", "Tue", client: "2.1.316", refused: ["P03", "P07", "P10", "P05"], warm: ["P05"])
+    public static let tuesday = run("tue", "Tue", client: "5.0.12", refused: ["P03", "P07", "P10", "P05"], warm: ["P05"])
     /// Wednesday, client upgraded: the loyalty mini-game completes again; the wargame copy still refuses.
-    public static let wednesday = run("wed", "Wed", client: "2.1.317", refused: ["P03", "P10"])
+    /// Version numbers are invented.
+    public static let wednesday = run("wed", "Wed", client: "5.0.13", refused: ["P03", "P10"])
 
     public static let runs = [monday, tuesday, wednesday]
 

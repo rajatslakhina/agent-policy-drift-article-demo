@@ -46,7 +46,7 @@ struct DriftView: View {
                     ClientRow(report: report)
                     ActionBanner(action: report.action, vendorSide: report.hasVendorSideDrift)
                 }
-                Section("10 canary probes") {
+                Section("\(report.drifts.count) canary probes") {
                     ForEach(report.drifts) { drift in
                         Button { selected = drift } label: { ProbeRow(drift: drift) }
                             .buttonStyle(.plain)
@@ -84,18 +84,18 @@ struct ActionBanner: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            switch action {
-            case let .freeze(ids, owners):
-                Label("Freeze agent work on \(ids.joined(separator: ", "))", systemImage: "hand.raised.fill")
+            if !action.freezeProbeIDs.isEmpty {
+                Label("Freeze agent work on \(action.freezeProbeIDs.joined(separator: ", "))", systemImage: "hand.raised.fill")
                     .font(.headline).foregroundStyle(.red)
-                Text("Owner: \(owners.joined(separator: ", ")). Run the documented fallback.")
+                Text("Owner: \(action.freezeOwners.joined(separator: ", ")). Run the documented fallback.")
                     .font(.caption).foregroundStyle(.secondary)
-            case let .notify(owners):
-                Label("Notify \(owners.joined(separator: ", "))", systemImage: "bell.fill")
-                    .font(.headline).foregroundStyle(.orange)
-                Text("Behaviour changed, nothing blocking.").font(.caption).foregroundStyle(.secondary)
-            case .none:
-                Label("No drift", systemImage: "checkmark.seal.fill")
+            }
+            if !action.notifyOwners.isEmpty {
+                Label("Notify \(action.notifyOwners.joined(separator: ", "))", systemImage: "bell.fill")
+                    .font(.subheadline.bold()).foregroundStyle(.orange)
+            }
+            if action.isNone {
+                Label("No drift, nothing failing", systemImage: "checkmark.seal.fill")
                     .font(.headline).foregroundStyle(.green)
             }
             if vendorSide {
@@ -149,10 +149,15 @@ struct ProbeRow: View {
                     .font(.caption.monospaced()).foregroundStyle(.secondary)
             }
             Spacer()
-            Text(drift.kind.label)
-                .font(.caption2.bold())
-                .foregroundStyle(drift.kind.color)
-                .multilineTextAlignment(.trailing)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(drift.kind.label)
+                    .font(.caption2.bold())
+                    .foregroundStyle(drift.kind.color)
+                if drift.kind != .contaminated, drift.after != nil, !drift.matchesExpectation {
+                    Text("Fails expectation").font(.caption2.bold()).foregroundStyle(.red)
+                }
+            }
+            .multilineTextAlignment(.trailing)
         }
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)

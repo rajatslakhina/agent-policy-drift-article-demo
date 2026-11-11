@@ -43,14 +43,24 @@ public struct ProbeDrift: Sendable, Hashable, Identifiable {
     public var matchesExpectation: Bool { after == probe.expected }
 }
 
-/// What the suite tells the team to do.
-public enum Action: Sendable, Hashable {
-    case none
-    /// Tell the owners; nobody's workflow is blocked.
-    case notify(owners: [String])
-    /// A blocking task class started refusing. Stop routing that work to the agent,
-    /// tell the owners, and run the documented fallback.
-    case freeze(probeIDs: [String], owners: [String])
+/// What the suite tells the team to do. Freezing and notifying are independent:
+/// a freeze on one task class never swallows a notification about another.
+public struct Action: Sendable, Hashable {
+    /// Blocking task classes whose fresh outcome fails expectation, newly or still.
+    /// Stop routing that work to the agent and run the documented fallback.
+    public let freezeProbeIDs: [String]
+    public let freezeOwners: [String]
+    /// Owners of every other change, plus owners of blocking probes that didn't run.
+    public let notifyOwners: [String]
+
+    public init(freezeProbeIDs: [String] = [], freezeOwners: [String] = [], notifyOwners: [String] = []) {
+        self.freezeProbeIDs = freezeProbeIDs
+        self.freezeOwners = freezeOwners
+        self.notifyOwners = notifyOwners
+    }
+
+    public static let none = Action()
+    public var isNone: Bool { self == .none }
 }
 
 public struct DriftReport: Sendable {
@@ -65,15 +75,24 @@ public struct DriftReport: Sendable {
     /// True when at least one change happened with the same client build on both sides.
     public var hasVendorSideDrift: Bool { changed.contains { $0.attribution == .vendorSide } }
 
+    /// Blocking probes with a fresh observation that fails expectation, whether new or carried over.
+    public var frozen: [ProbeDrift] {
+        drifts.filter { drift in
+            drift.probe.criticality == .blocking
+                && drift.after != nil
+                && drift.kind != .contaminated
+                && !drift.matchesExpectation
+        }
+    }
+
     public var action: Action {
-        let blocking = newRefusals.filter { $0.probe.criticality == .blocking }
-        if !blocking.isEmpty {
-            return .freeze(probeIDs: blocking.map(\.probe.id), owners: Self.owners(of: blocking))
-        }
-        if !changed.isEmpty {
-            return .notify(owners: Self.owners(of: changed))
-        }
-        return .none
+        let frozen = frozen
+        let frozenIDs = Set(frozen.map(\.probe.id))
+        let notify = changed.filter { !frozenIDs.contains($0.probe.id) }
+            + drifts.filter { $0.kind == .unobserved && $0.probe.criticality == .blocking }
+        return Action(freezeProbeIDs: frozen.map(\.probe.id),
+                      freezeOwners: Self.owners(of: frozen),
+                      notifyOwners: Self.owners(of: notify))
     }
 
     private static func owners(of drifts: [ProbeDrift]) -> [String] {

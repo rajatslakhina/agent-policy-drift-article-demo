@@ -4,7 +4,7 @@
 
 Article: (added after publish)
 
-![PolicyCanary on the iOS Simulator: Monday to Tuesday on the same client build, a freeze on P03 and a vendor-side note](Demo/Screenshots/drift-mon-tue-vendor-side.png)
+![PolicyCanary on the iOS Simulator: Monday to Tuesday on the same client build: a freeze on P03, a notification for Leo and a vendor-side note](Demo/Screenshots/drift-mon-tue-vendor-side.png)
 
 ## Why
 
@@ -16,20 +16,20 @@ Around 27 October 2026, Claude Code reportedly began refusing to recreate specif
 |---|---|
 | `Probe`, `Observation`, `Run` | A canary task with an owner, a criticality and an expected outcome; one scheduled pass of the suite. |
 | `DriftDetector.compare` | Compares two runs. Same client build plus a changed outcome → `.vendorSide`. Different build → `.clientRelease(from:to:)`. |
-| `DriftReport.action` | A blocking probe that starts refusing → `.freeze`. Any other change → `.notify`. |
-| `SpecLint` | Flags "copy of", "just like", "like <Name>" and other anchors, and checks for Behaviour / Constraints / Acceptance sections. |
-| `Sample` | A constructed team: 10 probes, 3 runs (Mon/Tue on 2.1.316, Wed on 2.1.317). The refusals are scripted, not measured. |
+| `DriftReport.action` | A blocking probe whose fresh outcome fails expectation (new or carried over) → freeze. Every other change, plus a blocking probe that didn't run → notify. The two lists are independent. |
+| `SpecLint` | Flags whole-word anchors like "copy of" and "just like", plus "like" followed by a capitalised word,, and checks for Behaviour / Constraints / Acceptance sections. |
+| `Sample` | A constructed team: 10 probes, 3 runs (Mon/Tue on 5.0.12, Wed on 5.0.13). The refusals are scripted and the versions are invented; nothing here is measured. |
 
 Load-bearing decisions:
 
 - **Fresh sessions only.** An observation with `freshSession: false` is reported as `.contaminated` and never triggers an action. A warm baseline counts as no baseline. Session memory or Git history can carry a refusal forward.
 - **Attribution before blame.** If the client didn't change and behaviour did, the report says so, so nobody spends an afternoon rewriting a prompt that was fine yesterday.
-- **The linter is deliberately dumb.** It matches phrases and doesn't make judgements. It puts "what are we actually building?" into code review.
+- **The linter is deliberately dumb.** It matches phrases and doesn't make judgements, so expect false positives such as "behaves like UIKit's list". It puts "what are we actually building?" into code review.
 
 ```swift
 let report = DriftDetector.compare(baseline: Sample.monday, current: Sample.tuesday, probes: Sample.probes)
-report.hasVendorSideDrift   // true: 2.1.316 on both runs
-report.action               // .freeze(probeIDs: ["P03"], owners: ["Dana"])
+report.hasVendorSideDrift   // true: 5.0.12 on both runs
+report.action               // freeze [P03] for Dana, notify [Leo]
 report.contaminated         // [P05]: refused in a warm session, ignored
 ```
 
@@ -40,7 +40,7 @@ SpecLint.lint("Make a match-3 mini-game for the loyalty tab, just like Gemfall."
 
 | Tue → Wed (client upgraded) | Spec lint |
 |---|---|
-| ![Tue to Wed: P07 newly allowed, attributed to client 2.1.316 to 2.1.317](Demo/Screenshots/drift-tue-wed-client-release.png) | ![Spec lint: three specs to rewrite, one missing acceptance criteria, six ready](Demo/Screenshots/spec-lint.png) |
+| ![Tue to Wed: P07 newly allowed and attributed to client 5.0.12 to 5.0.13, P03 still frozen because it fails expectation](Demo/Screenshots/drift-tue-wed-client-release.png) | ![Spec lint: three specs to rewrite, one missing acceptance criteria, six ready](Demo/Screenshots/spec-lint.png) |
 
 ## How to run it
 
@@ -57,7 +57,7 @@ No other setup. The app uses the library through a local Swift package reference
 ## Verification status
 
 - `swift build -Xswiftc -warnings-as-errors`: clean (Swift 6.4.2, Xcode 27.2, macOS 27.2)
-- `swift test`: **17/17 passing**. Every outcome in the constructed week is asserted.
+- `swift test`: **19/19 passing**. Every outcome in the constructed week is asserted.
 - iOS Simulator: built and launched with `xcodebuild` + `simctl` on an iPhone 17 Pro (iOS 27.2) simulator, three launches, each confirmed running by PID. The screenshots in `Demo/Screenshots/` come from those runs.
 
 MIT licensed.
